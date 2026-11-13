@@ -26,7 +26,7 @@ const SEA_ONLY = ["FAS", "FOB", "CFR", "CIF"];
 const NEEDS = {
   buyer: {
     EXW: ["O:PUP", "O:ECC", "O:OHC", "FRT", "D:DHC", "D:ICC"],
-    FCA: ["FRT", "D:DHC", "D:ICC"],
+    FCA: ["O:OHC", "FRT", "D:DHC", "D:ICC"],
     CPT: ["D:DHC", "D:ICC"],
     CIP: ["D:DHC", "D:ICC"],
     DAP: ["D:ICC"],
@@ -69,20 +69,27 @@ export function chargeable(grossKg, volKg) {
 }
 
 /** The weight break for a chargeable weight, then the cheaper of that and any higher break charged at its threshold. */
-export function priceFreight(sh, row, kg) {
+export function priceFreight(sh, row, kg, perKg = 0) {
   const air = sh.tabs.Air;
   const rate = (b) => cents(air[row][b.col]);
   let at = BREAKS[0];
   for (const b of BREAKS) if (kg >= b.from) at = b;
   const base = { brk: at, kg, rate: rate(at), amount: Math.round(rate(at) * kg) };
   let best = base;
+  // A higher break raises the chargeable weight, so surcharges charged on chargeable weight (perKg) rise with it.
+  const allIn = (x) => x.amount + Math.round(perKg * x.kg);
   for (const b of BREAKS) {
     if (b.from <= at.from) continue;
-    const amount = Math.round(rate(b) * b.from);
-    if (amount < best.amount) best = { brk: b, kg: b.from, rate: rate(b), amount };
+    const next = { brk: b, kg: b.from, rate: rate(b), amount: Math.round(rate(b) * b.from) };
+    if (allIn(next) < allIn(best)) best = next;
   }
   const min = cents(air[row][4]);
   return { base, best, min, usesMin: best.amount < min, amount: Math.max(best.amount, min) };
+}
+
+/** The carrier's per-kg surcharges that are charged on chargeable weight, in cents. */
+export function followsKg(sh, carrier) {
+  return sh.tabs.Surcharges.reduce((sum, x, i) => (i > 0 && x[0] === carrier && x[5] !== "Gross" ? sum + cents(x[4]) : sum), 0);
 }
 
 function localRow(sh, station, side, code, postcode) {
@@ -191,7 +198,7 @@ export function quoteRfq(rfq, sh) {
 
   let needs = [];
   if (term && SEA_ONLY.includes(term)) {
-    hold("incoterm", `${term} is a sea and inland waterway rule in Incoterms 2020. For air freight the matching rule is usually FCA${term === "CIF" ? " or CIP" : term === "CFR" ? " or CPT" : ""}. Ask which one is meant.`);
+    hold("incoterm", `${term} is a sea and inland waterway rule in Incoterms 2020. For air freight the matching rule is ${{ FAS: "FCA", FOB: "FCA", CFR: "CPT", CIF: "CIP" }[term]}. Ask which one is meant.`);
   } else if (term && origin && dest && !role) {
     hold("incoterm", `Neither or both airports are in ${home} (Terms!B5), so the sheet cannot tell whether the customer is the buyer or the seller.`, homeCell ? [homeCell] : []);
   } else if (term && role) {
@@ -215,8 +222,11 @@ export function quoteRfq(rfq, sh) {
       const row = air[airRow];
       const carrier = row[2];
       const c = (col) => cellAt(sh, "Air", airRow, col);
+      let chargedKg = kg;
       if (kg != null) {
-        const p = priceFreight(sh, airRow, kg);
+        const p = priceFreight(sh, airRow, kg, followsKg(sh, carrier));
+        chargedKg = p.best.kg;
+        if (chargedKg !== kg) weight.chargedKg = chargedKg;
         const cells = [c(p.best.brk.col)];
         let calc = `${kgFmt(kg)} kg × ${fmt(p.best.rate)} (${p.best.brk.label})`;
         if (p.best !== p.base) {
@@ -249,7 +259,7 @@ export function quoteRfq(rfq, sh) {
         const s = sur[r];
         const sc = (col) => cellAt(sh, "Surcharges", r, col);
         const onGross = s[5] === "Gross";
-        const baseKg = onGross ? (grossList.length === 1 ? grossList[0] : null) : kg;
+        const baseKg = onGross ? (grossList.length === 1 ? grossList[0] : null) : chargedKg;
         const line = { side: "Freight", code, label: `${s[2]} (${code})`, currency: s[3], curCell: sc(3), cells: [sc(4), sc(5)], state: "pass" };
         if (baseKg == null) Object.assign(line, { calc: "", amount: null, state: "none", note: "Waits for one weight" });
         else Object.assign(line, { calc: `${kgFmt(baseKg)} kg ${onGross ? "gross" : "chargeable"} × ${s[4]}`, amount: Math.round(cents(s[4]) * baseKg) });
@@ -313,7 +323,7 @@ export function quoteRfq(rfq, sh) {
   // One weight, one break.
   if (weightBlocked && needs.includes("FRT") && airRow != null) {
     const parts = options.map((o) => {
-      const p = priceFreight(sh, airRow, o.chargeKg);
+      const p = priceFreight(sh, airRow, o.chargeKg, followsKg(sh, air[airRow][2]));
       return { o, p };
     });
     const brks = [...new Set(parts.map((x) => x.p.best.brk.label))];

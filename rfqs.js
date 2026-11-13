@@ -52,7 +52,7 @@ could you send rates for 2 pallets from Hong Kong to Frankfurt, FCA HKG.
 2 pallets 120x100x120 cm, total 640 kg.
 Cargo ready 20.11.
 
-We clear and collect at FRA ourselves, so destination handling and customs only please.
+We collect at FRA ourselves, so destination handling and customs clearance only please, no delivery.
 
 Regards, Lena`,
   },
@@ -81,7 +81,7 @@ Jonas`,
     body: `Hi,
 
 FCA Singapore, to Munich airport.
-3 cartons 60x50x50 cm, approx. 230-260 kg, final weight after packing.
+3 crates 60x50x50 cm, approx. 230-260 kg, final weight after packing.
 Ready 24 Nov.
 
 Please quote incl. import customs.

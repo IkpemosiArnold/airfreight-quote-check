@@ -27,7 +27,7 @@ test("volumetric weight: 6 x 80 x 60 x 75 cm / 6000 = 360 kg beats 312 kg gross"
   assert.equal(w.volKg, 360);
   assert.equal(w.chargeKg, 360);
   assert.equal(w.wins, "volume");
-  assert.equal(fmt(res.garching.total), "1,506.20");
+  assert.equal(fmt(res.garching.total), "1,542.20");
 });
 
 test("every line on a ready quote points at sheet cells", () => {
@@ -50,7 +50,10 @@ test("a lower charge at a higher weight break is used, and both cells are shown"
   assert.equal(res.aschheim.weight.chargeKg, 285);
   const ohc = res.aschheim.lines.find((l) => l.code === "OHC");
   assert.equal(ohc.amount, 3500); // 285 x 0.12 = 34.20, minimum 35.00
-  assert.equal(fmt(res.aschheim.total), "1,097.95");
+  assert.equal(res.aschheim.weight.chargedKg, 300);
+  const fsc = res.aschheim.lines.find((l) => l.code === "FSC");
+  assert.equal(fsc.amount, 22500); // fuel follows the chargeable weight: 300 kg x 0.75
+  assert.equal(fmt(res.aschheim.total), "1,111.00");
 });
 
 test("an expired rate and an expired fuel surcharge are both named with their cells", () => {
@@ -144,4 +147,16 @@ test("every field read from the email points at its exact text", () => {
     const spans = [f.ready, f.currency, f.door, f.pickup, f.volume, ...f.pieces, ...f.weights, ...(f.incoterm?.marks || []), ...(f.lane.origin?.marks || []), ...(f.lane.dest?.marks || [])].filter(Boolean);
     for (const s of spans) assert.equal(f.text.slice(s.index, s.index + s.text.length), s.text, `${r.id}: ${s.text}`);
   }
+});
+
+test("FCA puts origin handling at the departure airport on the buyer", () => {
+  const ohc = res.garching.lines.find((l) => l.code === "OHC");
+  assert.equal(ohc.side, "Origin");
+  assert.equal(ohc.amount, 3600); // 360 kg x 0.10
+  assert.deepEqual(ohc.cells.map((c) => c.ref), ["Local!D5", "Local!G5"]);
+});
+
+test("the sea-only hint names the matching any-mode rule", () => {
+  const q = quoteRfq(rfq("RFQ PVG-MUC", "CIF Munich, from Shanghai, 2 cartons 50x50x50 cm, 60 kg, ready 20 Nov"), sheet);
+  assert.match(q.holds.map((h) => h.text).join(" "), /the matching rule is CIP\./);
 });

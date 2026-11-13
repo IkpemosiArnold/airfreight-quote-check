@@ -7,9 +7,9 @@ The sample has seven made-up RFQs and one made-up rate sheet (five carriers, Q4 
 ## What it shows
 
 - **Chargeable weight, with the formula.** Volume is length × width × height × pieces in cm³. Volumetric weight is volume ÷ 6,000, with the divisor read from the sheet (`Terms!B3`). Chargeable weight is the higher of gross and volumetric, rounded up to the next 0.5 kg.
-- **The weight break, then the cheaper higher break.** The rate comes from the break the chargeable weight falls in (-45, +45, +100, +300, +500, +1000). If a higher break charged at its threshold weight costs less, that is used, and both cells are shown. Example: 285 kg at +100 (2.60) is 741.00; 300 kg at +300 (2.20) is 660.00, so the quote uses 660.00.
+- **The weight break, then the cheaper higher break.** The rate comes from the break the chargeable weight falls in (-45, +45, +100, +300, +500, +1000). If a higher break charged at its threshold weight costs less, that is used, the chargeable weight becomes that threshold, and both cells are shown. Example: 285 kg at +100 (2.60) is 741.00; 300 kg at +300 (2.20) is 660.00, so the quote charges 300 kg. Surcharges the sheet puts on chargeable weight are then charged on 300 kg too, and the comparison includes them.
 - **Surcharges on the basis the sheet states.** Fuel (FSC) and security (SSC) surcharges are per kg on chargeable or gross weight, as the Surcharges tab says for each carrier.
-- **Incoterm charges.** The forwarder is in Germany (`Terms!B5`). When the destination is in Germany the customer is the buyer; when the origin is, the customer is the seller. The Incoterms 2020 rule then decides which origin, freight and destination charges go on the quote.
+- **Incoterm charges.** The forwarder is in Germany (`Terms!B5`). When the destination is in Germany the customer is the buyer; when the origin is, the customer is the seller. The Incoterms 2020 rule then decides which origin, freight and destination charges go on the quote. FCA is read as FCA at the origin airport: the seller pays for getting the goods there and for export clearance, and the buyer pays origin handling, freight and the destination charges.
 - **Every line links back.** Tap a line and the sheet row opens with the cells outlined. Anything the email does not say is "not found". Nothing is guessed, converted or borrowed from another lane.
 
 ## The checks
@@ -44,10 +44,11 @@ Checked on 13 Nov 2026.
 - Volume ÷ 6,000 cm³ per kg, and the higher of volumetric and actual weight is charged: IATA Knowledge Hub, "Air Cargo Tariffs and Rules: What You Need to Know" (27 Jul 2021), https://www.iata.org/en/publications/newsletters/iata-knowledge-hub/air-cargo-tariffs-and-rules-what-you-need-to-know
 - The same divisor from a German forwarder ("In der Luftfracht werden 6.000 cm³ einem Kilogramm gleichgesetzt"), and the sea freight ratio of 1 cbm = 1 t: DSV, "Volumengewicht berechnen", https://www.dsv.com/de-de/hilfe/faq/volumengewichtsrechner
 - Rounding up to the next half kilogram: time:matters glossary, https://www.time-matters.com/emergency-logistics-glossary/chargeable-weight/ and MOL Logistics weight calculator, https://www.mol-logistics.com/weight-calculator/ . Both are secondary sources; the IATA TACT Rules are paid and were not checked. Some carriers round differently.
+- The same rounding, and the chargeable weight becoming the break's minimum weight when the higher break gives the lower charge ("Chargeable weight = 1000 kg" for a 995 kg shipment): ASEAN training deck on the TACT rules, "Chapter 5: Calculation of Air Freight", slides 19 and 69 to 72, https://asean.org/wp-content/uploads/2023/02/Air-Freight-C5.-Calculation-of-Air-Freight-PPT-Trainer-V2.pdf
 - Weight breaks (+45, +100, +300, +500, +1000) and quoting at the next break when it is cheaper: CargoLinked, "How Air Freight Pricing Works" (13 May 2026), https://cargolinked.com/guides/how-air-freight-pricing-works-chargeable-weight
 - Fuel and security surcharges per kg on chargeable or gross weight, depending on the airline: FreightWaves, "How is Air Freight Priced?" (2 Jan 2020), https://www.freightwaves.com/news/how-is-air-freight-priced
 - FAS, FOB, CFR and CIF are for sea and inland waterway transport: US International Trade Administration, "Know Your Incoterms", https://www.trade.gov/know-your-incoterms
-- EXW puts export formalities on the buyer; FCA puts export clearance on the seller: ICC Academy, https://academy.iccwbo.org/incoterms/article/incoterms-2020-exw-or-fca/
+- EXW puts export formalities on the buyer; FCA puts export clearance on the seller, and costs after the handover on the buyer: ICC Academy, https://academy.iccwbo.org/incoterms/article/incoterms-2020-exw-or-fca/
 - CIP needs insurance under Institute Cargo Clauses (A) for at least 110% of the contract value, unless agreed otherwise: ICC Academy, https://academy.iccwbo.org/incoterms/article/incoterms-2020-cpt-or-cip/
 
 Express couriers often use 5,000 instead of 6,000. Change `Terms!B3` and the volumetric weight follows (there is a test for it).
@@ -58,7 +59,7 @@ Express couriers often use 5,000 instead of 6,000. Change `Terms!B3` and the vol
 node --test
 ```
 
-Needs Node 20 or later. No dependencies. 18 tests cover the sample results, the weight maths, the cheaper higher break, each hold, the "not found" rule, rounding, number formats (`1.250 kg` is 1,250 kg) and that every underlined value sits at its exact place in the email.
+Needs Node 20 or later. No dependencies. 20 tests cover the sample results, the weight maths, the cheaper higher break, each hold, the "not found" rule, rounding, number formats (`1.250 kg` is 1,250 kg) and that every underlined value sits at its exact place in the email.
 
 ## Open the page locally
 
@@ -74,7 +75,11 @@ Then open http://localhost:8785. The page makes no network calls beyond its own 
 - Who the customer is comes from the home country on the sheet. Cross-trade (neither airport in Germany) is held.
 - Pieces need a count and dimensions in cm. Inches, per-piece weights and stackability are not read.
 - Local charges have no validity dates in the sample, and delivery and pickup zones are by the first two digits of a German postcode.
-- Surcharges use the chargeable weight even when the freight is charged at a higher break, as the sheet says. Some carriers do it differently.
+- Local per-kg charges use the chargeable weight before any higher break. A real tariff says which weight applies.
+- Rate validity is checked against the cargo ready date. Carriers usually apply the rate and surcharge of the flight date, which comes later.
+- The named place after the Incoterm is not read. FCA is taken as the origin airport and CPT and CIP as the destination airport. Under FCA many shippers pay origin handling in practice; the demo follows the ICC wording and puts it on the buyer.
+- A ready date with no year takes the year of the email.
+- The USD rate out of Munich is there to show the currency check. Rates are normally in the currency of the country of departure.
 - The reply draft is plain text. Nothing is sent.
 
 ## Design

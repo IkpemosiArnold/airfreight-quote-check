@@ -205,7 +205,7 @@ textarea:focus-visible { outline: none; border-color: var(--accent); }
 a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .foot { margin-top: var(--s7); padding-top: var(--s4); border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
 .foot p { margin: 0 0 var(--s2); max-width: 40em; }
-.foot a { display: inline-block; padding: 11px 0; }
+.foot a { display: inline-block; padding: 12px 0; }
 
 /* Desktop: the inbox left, the quote pinned right */
 .evidence-col { display: none; }

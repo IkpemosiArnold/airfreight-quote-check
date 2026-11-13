@@ -32,8 +32,8 @@ export const sheet = {
       ["Carrier C", "SSC", "Security surcharge", "EUR", "0.15", "Gross", "01.08.2026", "31.12.2026"],
       ["Carrier D", "FSC", "Fuel surcharge", "EUR", "0.75", "Chargeable", "01.11.2026", "30.11.2026"],
       ["Carrier D", "SSC", "Security surcharge", "EUR", "0.12", "Chargeable", "01.10.2026", "31.12.2026"],
-      ["Carrier E", "FSC", "Fuel surcharge", "EUR", "0.80", "Chargeable", "01.11.2026", "30.11.2026"],
-      ["Carrier E", "SSC", "Security surcharge", "EUR", "0.15", "Chargeable", "01.10.2026", "31.12.2026"],
+      ["Carrier E", "FSC", "Fuel surcharge", "EUR", "0.80", "Gross", "01.11.2026", "30.11.2026"],
+      ["Carrier E", "SSC", "Security surcharge", "EUR", "0.15", "Gross", "01.10.2026", "31.12.2026"],
     ],
     Local: [
       ["Station", "Side", "Code", "Charge", "Curr", "Per shipment", "Per kg", "Min", "PLZ"],
@@ -49,6 +49,9 @@ export const sheet = {
       ["MUC", "Destination", "DEL", "Delivery, zone 1", "EUR", "95.00", "", "", "80, 81, 85"],
       ["FRA", "Destination", "DHC", "Destination handling", "EUR", "", "0.11", "35.00", ""],
       ["FRA", "Destination", "ICC", "Import customs clearance", "EUR", "65.00", "", "", ""],
+      ["HKG", "Origin", "OHC", "Origin handling", "EUR", "", "0.10", "30.00", ""],
+      ["SIN", "Origin", "OHC", "Origin handling", "EUR", "", "0.10", "30.00", ""],
+      ["ICN", "Origin", "OHC", "Origin handling", "EUR", "", "0.10", "30.00", ""],
     ],
   },
 };

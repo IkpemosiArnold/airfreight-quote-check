@@ -123,6 +123,7 @@ function weightBlock(q) {
   if (w.chargeKg != null) {
     const note = w.wins === "volume" ? "volumetric is higher" : w.wins === "gross" ? "gross is higher" : "the higher of the two";
     line("Chargeable weight", `${kgFmt(w.chargeKg)} kg, ${note}, rounded up to the next 0.5 kg`, "strong");
+    if (w.chargedKg) line("Charged as", `${kgFmt(w.chargedKg)} kg chargeable, the next weight break, because it costs less`, "strong");
   } else if (w.gross.length > 1) line("Chargeable weight", "Not settled: the email gives more than one weight", "nf");
   return box;
 }
@@ -159,6 +160,10 @@ function quoteTable(q) {
             const g = miniGrid(l.cells);
             g.classList.add("enter");
             item.append(g);
+            for (const sc of g.querySelectorAll(".grid-scroll")) {
+              const hit = sc.querySelector("td.hit");
+              if (hit) sc.scrollLeft = Math.max(0, hit.offsetLeft - 56);
+            }
             requestAnimationFrame(() => requestAnimationFrame(() => g.classList.add("drawn")));
           }
         });
@@ -198,7 +203,7 @@ function draftReply(q) {
   const lines = q.lines.map((l) => `${l.label}: ${l.currency} ${fmt(l.amount)}`);
   return `${first ? `Hi ${first}` : "Hello"},
 
-thanks for your request. Our offer for ${q.origin} to ${q.dest}, ${q.term}, ${kgFmt(q.weight.chargeKg)} kg chargeable:
+thanks for your request. Our offer for ${q.origin} to ${q.dest}, ${q.term}, ${kgFmt(q.weight.chargedKg || q.weight.chargeKg)} kg chargeable${q.weight.chargedKg ? ` (${kgFmt(q.weight.chargeKg)} kg charged at the next weight break, which costs less)` : ""}:
 
 ${lines.join("\n")}
 Total: ${q.currency} ${fmt(q.total)}
@@ -347,7 +352,7 @@ function render(list, { fresh = false, focusId = null } = {}) {
     const val = el("span", "val");
     const lane = q.origin && q.dest ? `${q.origin} to ${q.dest}` : "Lane not found";
     val.append(el("b", null, `${lane}${q.term ? `, ${q.term}` : ""}`), `${q.rfq.from.split(",")[0]}, ${q.rfq.time}`);
-    if (q.ready) val.append(el("span", "meta", `${q.currency} ${fmt(q.total)}, ${kgFmt(q.weight.chargeKg)} kg chargeable`));
+    if (q.ready) val.append(el("span", "meta", `${q.currency} ${fmt(q.total)}, ${kgFmt(q.weight.chargeKg)} kg ${q.weight.chargedKg ? `charged as ${kgFmt(q.weight.chargedKg)} kg` : "chargeable"}`));
     else val.append(el("span", "meta st-fail", shortReason(q)));
     return rowItem(`r-${q.rfq.id}-${i}`, [st, val], () => detail(q));
   }));
@@ -359,7 +364,7 @@ function render(list, { fresh = false, focusId = null } = {}) {
   let k = 0;
   if (focusId) k = Math.max(0, order.findIndex((i) => list[i].id === focusId));
   const li = rows.children[k];
-  if (li) {
+  if (li && (wide.matches || focusId)) {
     show(li._entry, false);
     if (focusId) li.scrollIntoView({ block: "start", behavior: calm() ? "auto" : "smooth" });
   }
