@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quote Check</title>
+<meta name="description" content="Customer RFQ emails priced from a forwarder's air freight rate sheet. Every price line points at its cell; plain code holds back what it cannot trace.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#fcfcfc">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1116">
+<link rel="icon" href="data:,">
+<link rel="preload" href="fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-cross" viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></symbol>
+  <symbol id="i-none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.2 2.2"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 16 16"><path d="M6 3.5L10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+<main class="shell">
+  <div class="sheet-col">
+    <header class="top">
+      <p class="mark">Quote Check <span class="tag">Sample data</span></p>
+      <h1>Every price points at its rate-sheet cell.</h1>
+      <p class="sub">Seven RFQ emails and one air freight rate sheet, all made up. Plain code prices them and holds back what it cannot trace.</p>
+    </header>
+
+    <section class="reading" aria-labelledby="summary">
+      <p class="summary" id="summary" role="status"><span class="sum-main">Checking</span></p>
+      <button type="button" class="btn text why-btn" id="why-btn" aria-expanded="false" aria-controls="chain">What ready means</button>
+      <div class="why-text" id="chain" hidden>
+        <p>Ready means the lane, every surcharge and every charge the Incoterm puts on the customer is on the sheet, valid on the cargo ready date, in the quote currency, and the email gives one weight. Anything else is held back with the reason and the cells.</p>
+        <p>Chargeable weight is the higher of gross weight and volume ÷ 6,000 cm³ per kg, rounded up to the next 0.5 kg. When a higher weight break gives a lower charge, that one is used and both cells are shown.</p>
+      </div>
+      <div id="groups" class="groups"></div>
+    </section>
+  </div>
+
+  <aside class="evidence-col" id="side" aria-live="polite"></aside>
+
+  <section class="tool" id="own-tool" aria-labelledby="own-h">
+    <h2 id="own-h">Try your own RFQ</h2>
+    <p class="tool-sub">Paste an email; the first line is the subject. It is priced against the sample sheet below, in this browser. Lanes on the sheet: PVG, SZX, SIN, HKG to MUC or FRA, and MUC to JFK or ORD.</p>
+    <label class="sr" for="own-in">RFQ email</label>
+    <textarea id="own-in" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="RFQ PVG-FRA&#10;FCA Shanghai PVG to Frankfurt FRA, 4 pallets 120x80x150 cm, 900 kg, ready 26 Nov."></textarea>
+    <div class="actions">
+      <button type="button" id="own-check" class="btn primary">Price it</button>
+      <button type="button" id="own-sample" class="btn text">Fill in an example</button>
+    </div>
+    <p id="own-error" class="error" role="alert" hidden></p>
+  </section>
+
+  <section class="tool" id="sheet-tool" aria-labelledby="sheet-h">
+    <h2 id="sheet-h">The sample rate sheet</h2>
+    <p class="tool-sub">Air rates Q4 2026, five made-up carriers. Load new Hong Kong rates and watch that quote go through.</p>
+    <div class="actions top-actions">
+      <button type="button" id="fix-hkg" class="btn text">Load November rates for HKG</button>
+      <button type="button" id="reset" class="btn text">Reset sample</button>
+    </div>
+    <div class="tabs" id="sheet-tabs" role="group" aria-label="Sheet tabs"></div>
+    <div class="grid-scroll big" id="sheet-grid"></div>
+  </section>
+
+  <footer class="foot" id="foot">
+    <p>For freight forwarding teams who quote from rate sheets. Built by Arnold Ikpemosi Adeyemi. Made-up rates, carriers and customers; not a real offer.</p>
+    <p><a href="https://ikpemosi.work">ikpemosi.work</a></p>
+  </footer>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
